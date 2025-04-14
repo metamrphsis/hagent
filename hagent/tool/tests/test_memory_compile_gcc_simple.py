@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 from typing import List, Dict
 
-from hagent.tool.react import React
+from hagent.tool.memory import React
 from hagent.tool.compile import Diagnostic
 from hagent.core.llm_wrap import LLM_template, LLM_wrap
 
@@ -120,8 +120,8 @@ def fix_callback_cpp(current_code: str, diag: Diagnostic, fix_example: dict, del
         # Initialize LLM_wrap instance using configuration from file.
         # Use the name that exists in the config file
         lw = LLM_wrap(
-            name='test_react_compile_slang_simple', 
-            log_file='test_react_compile_gcc_simple.log', 
+            name='test_memory_compile_slang_simple', 
+            log_file='test_memory_compile_gcc_simple.log', 
             conf_file=conf_file
         )
         
@@ -144,7 +144,7 @@ def fix_callback_cpp(current_code: str, diag: Diagnostic, fix_example: dict, del
     return current_code
 
 
-def test_react_with_db():
+def test_memory_with_db():
     """Test React with a database file."""
     # Create a temporary DB file
     with tempfile.NamedTemporaryFile(delete=False, suffix='.yaml') as tmp:
@@ -154,9 +154,9 @@ def test_react_with_db():
     
     try:
         # Initialize React with the DB file
-        react_tool = React()
-        setup_success = react_tool.setup(db_path=tmp_name, learn=True, max_iterations=3)
-        assert setup_success, f"React setup failed: {react_tool.error_message}"
+        memory_tool = React()
+        setup_success = memory_tool.setup(db_path=tmp_name, learn=True, max_iterations=3)
+        assert setup_success, f"React setup failed: {memory_tool.error_message}"
         
         # A C++ snippet with a missing semicolon
         faulty_code = r"""
@@ -169,14 +169,14 @@ int main() {
 """
         
         # Run the React cycle with the provided callbacks
-        fixed_code = react_tool.react_cycle(faulty_code, check_callback_cpp, fix_callback_cpp)
+        fixed_code = memory_tool.react_cycle(faulty_code, check_callback_cpp, fix_callback_cpp)
         
         # Check results
         assert fixed_code, "Failed to fix the code"
         assert ";" in fixed_code, "Semicolon not added to the fixed code"
         
         # Check the log
-        log = react_tool.get_log()
+        log = memory_tool.get_log()
         assert len(log) > 0, "Log should contain entries"
         
         print("Test with DB passed!")
@@ -186,12 +186,12 @@ int main() {
             os.remove(tmp_name)
 
 
-def test_react_without_db():
+def test_memory_without_db():
     """Test React without a database file."""
     # Initialize React without a DB file
-    react_tool = React()
-    setup_success = react_tool.setup(learn=False, max_iterations=3, comment_prefix="//")
-    assert setup_success, f"React setup failed: {react_tool.error_message}"
+    memory_tool = React()
+    setup_success = memory_tool.setup(learn=False, max_iterations=3, comment_prefix="//")
+    assert setup_success, f"React setup failed: {memory_tool.error_message}"
     
     # A C++ snippet with a missing semicolon
     faulty_code = r"""
@@ -204,7 +204,7 @@ int main() {
 """
     
     # Run the React cycle with the provided callbacks
-    fixed_code = react_tool.react_cycle(faulty_code, check_callback_cpp, fix_callback_cpp)
+    fixed_code = memory_tool.react_cycle(faulty_code, check_callback_cpp, fix_callback_cpp)
     
     # Check results
     assert fixed_code, "Failed to fix the code"
@@ -215,14 +215,14 @@ int main() {
 
 if __name__ == '__main__':
     # Run the tests
-    test_react_with_db()
-    test_react_without_db()
+    test_memory_with_db()
+    test_memory_without_db()
     
     # Original example code
-    react_tool = React()
-    setup_success = react_tool.setup(db_path='foo.yaml', learn=True, max_iterations=3)
+    memory_tool = React()
+    setup_success = memory_tool.setup(db_path='foo.yaml', learn=True, max_iterations=3)
     if not setup_success:
-        print(f'React setup failed: {react_tool.error_message}')
+        print(f'React setup failed: {memory_tool.error_message}')
         exit(1)
 
     # A C++ snippet with a missing semicolon.
@@ -236,7 +236,7 @@ int main() {
 """
 
     # Run the React cycle with the provided callbacks.
-    fixed_code = react_tool.react_cycle(faulty_code, check_callback_cpp, fix_callback_cpp)
+    fixed_code = memory_tool.react_cycle(faulty_code, check_callback_cpp, fix_callback_cpp)
 
     # Print results.
     if fixed_code:

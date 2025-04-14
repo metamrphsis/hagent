@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Test file specifically designed to increase coverage of the React class.
-This file targets uncovered lines in react.py.
+Test file specifically designed to increase coverage of the Memory class.
+This file targets uncovered lines in memory.py.
 """
 
 import os
@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch, mock_open, MagicMock
 from typing import List, Dict
 
-from hagent.tool.react import React, process_multiline_strings, insert_comment
+from hagent.tool.memory import React, process_multiline_strings, insert_comment
 from hagent.tool.compile import Diagnostic
 
 
@@ -51,12 +51,12 @@ class MockDiagnosticWithError(Diagnostic):
         return code  # Just return the code unchanged for simplicity
 
 
-class TestReactCoverage(unittest.TestCase):
-    """Test class to increase coverage of React."""
+class TestMemoryCoverage(unittest.TestCase):
+    """Test class to increase coverage of Memory."""
     
     def setUp(self):
         """Set up for tests."""
-        self.react = React()
+        self.memory = React()
         # Create a temporary DB file for testing
         self.temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.yaml')
         self.temp_db.close()
@@ -107,52 +107,52 @@ class TestReactCoverage(unittest.TestCase):
     def test_setup(self):
         """Test the setup method."""
         # Test with non-existent DB file and learn mode disabled
-        result = self.react.setup(db_path="nonexistent.yaml", learn=False)
+        result = self.memory.setup(db_path="nonexistent.yaml", learn=False)
         self.assertFalse(result)
-        self.assertIn("Database file not found", self.react.error_message)
+        self.assertIn("Database file not found", self.memory.error_message)
         
         # Test with non-existent DB file and learn mode enabled
-        result = self.react.setup(db_path=self.temp_db.name, learn=True)
+        result = self.memory.setup(db_path=self.temp_db.name, learn=True)
         self.assertTrue(result)
         
         # Test with existing DB file
         with open(self.temp_db.name, 'w') as f:
             f.write("error_type1:\n  fix_question: 'question'\n  fix_answer: 'answer'\n")
-        result = self.react.setup(db_path=self.temp_db.name, learn=False)
+        result = self.memory.setup(db_path=self.temp_db.name, learn=False)
         self.assertTrue(result)
-        self.assertEqual(self.react._db["error_type1"]["fix_question"], "question")
+        self.assertEqual(self.memory._db["error_type1"]["fix_question"], "question")
         
         # Test with corrupt DB file
         with open(self.temp_db.name, 'w') as f:
             f.write("error_type1: 'not a dict'\n")
 
-        result = self.react.setup(db_path=self.temp_db.name, learn=False)
+        result = self.memory.setup(db_path=self.temp_db.name, learn=False)
         self.assertTrue(result)
         
         # Test with no DB file
-        result = self.react.setup(learn=True, max_iterations=10, comment_prefix="//")
+        result = self.memory.setup(learn=True, max_iterations=10, comment_prefix="//")
         self.assertTrue(result)
-        self.assertEqual(self.react._max_iterations, 10)
-        self.assertEqual(self.react._lang_prefix, "//")
+        self.assertEqual(self.memory._max_iterations, 10)
+        self.assertEqual(self.memory._lang_prefix, "//")
     
     def test_get_delta(self):
         """Test the _get_delta method."""
         code = "\n".join([f"line{i}" for i in range(1, 21)])
         
         # Test getting delta from the middle
-        delta, start, end = self.react._get_delta(code, 10, window=3)
+        delta, start, end = self.memory._get_delta(code, 10, window=3)
         self.assertEqual(start, 7)
         self.assertEqual(end, 13)
         self.assertIn("line7", delta)
         self.assertIn("line13", delta)
         
         # Test getting delta from the beginning
-        delta, start, end = self.react._get_delta(code, 1, window=3)
+        delta, start, end = self.memory._get_delta(code, 1, window=3)
         self.assertEqual(start, 1)
         self.assertEqual(end, 4)
         
         # Test getting delta from the end
-        delta, start, end = self.react._get_delta(code, 20, window=3)
+        delta, start, end = self.memory._get_delta(code, 20, window=3)
         self.assertEqual(start, 17)
         self.assertEqual(end, 20)
     
@@ -162,7 +162,7 @@ class TestReactCoverage(unittest.TestCase):
         patch = "patched_line1\npatched_line2\n"
         
         # Apply patch in the middle
-        result = self.react._apply_patch(full_code, patch, 4, 6)
+        result = self.memory._apply_patch(full_code, patch, 4, 6)
         self.assertIn("line3", result)
         self.assertIn("patched_line1", result)
         self.assertIn("patched_line2", result)
@@ -172,14 +172,14 @@ class TestReactCoverage(unittest.TestCase):
         self.assertNotIn("line6", result)
         
         # Apply patch at the beginning
-        result = self.react._apply_patch(full_code, patch, 1, 2)
+        result = self.memory._apply_patch(full_code, patch, 1, 2)
         self.assertIn("patched_line1", result)
         self.assertIn("line3", result)
         self.assertTrue(result.startswith("patched_line1"))
         self.assertFalse(result.startswith("line1"))
         
         # Apply patch at the end
-        result = self.react._apply_patch(full_code, patch, 9, 10)
+        result = self.memory._apply_patch(full_code, patch, 9, 10)
         self.assertIn("line8", result)
         self.assertIn("patched_line1", result)
         self.assertFalse("line9\n" in result)
@@ -187,41 +187,41 @@ class TestReactCoverage(unittest.TestCase):
     
     def test_add_error_example(self):
         """Test the _add_error_example method."""
-        self.react.setup(db_path=self.temp_db.name, learn=True)
+        self.memory.setup(db_path=self.temp_db.name, learn=True)
         
         # Add a new error example
-        self.react._add_error_example("error_type1", "question1", "answer1")
-        self.assertIn("error_type1", self.react._db)
-        self.assertEqual(self.react._db["error_type1"]["fix_question"], "question1")
-        self.assertEqual(self.react._db["error_type1"]["fix_answer"], "answer1")
+        self.memory._add_error_example("error_type1", "question1", "answer1")
+        self.assertIn("error_type1", self.memory._db)
+        self.assertEqual(self.memory._db["error_type1"]["fix_question"], "question1")
+        self.assertEqual(self.memory._db["error_type1"]["fix_answer"], "answer1")
         
         # Add another error example
-        self.react._add_error_example("error_type2", "question2", "answer2")
-        self.assertIn("error_type2", self.react._db)
+        self.memory._add_error_example("error_type2", "question2", "answer2")
+        self.assertIn("error_type2", self.memory._db)
         
         # Verify DB was saved
-        self.react._learn_mode = False
-        self.react._add_error_example("error_type3", "question3", "answer3")
+        self.memory._learn_mode = False
+        self.memory._add_error_example("error_type3", "question3", "answer3")
         # This shouldn't be saved to disk since learn_mode is False
-        self.react.setup(db_path=self.temp_db.name, learn=False)
-        self.assertIn("error_type1", self.react._db)
-        self.assertIn("error_type2", self.react._db)
-        self.assertNotIn("error_type3", self.react._db)
+        self.memory.setup(db_path=self.temp_db.name, learn=False)
+        self.assertIn("error_type1", self.memory._db)
+        self.assertIn("error_type2", self.memory._db)
+        self.assertNotIn("error_type3", self.memory._db)
     
     def test_get_log(self):
         """Test the get_log method."""
-        self.react.setup()
-        self.assertEqual(self.react.get_log(), [])
+        self.memory.setup()
+        self.assertEqual(self.memory.get_log(), [])
         
         # Add some log entries
-        self.react._log.append({"iteration": 1, "check": None, "fix": None})
-        logs = self.react.get_log()
+        self.memory._log.append({"iteration": 1, "check": None, "fix": None})
+        logs = self.memory.get_log()
         self.assertEqual(len(logs), 1)
         self.assertEqual(logs[0]["iteration"], 1)
     
-    def test_react_cycle_success(self):
+    def test_memory_cycle_success(self):
         """Test the react_cycle method with successful fix."""
-        self.react.setup(max_iterations=3)
+        self.memory.setup(max_iterations=3)
         
         # Mock callbacks
         def check_callback(code: str) -> List[Diagnostic]:
@@ -239,22 +239,22 @@ class TestReactCoverage(unittest.TestCase):
             return "This code has a fixed"
         
         # Test with code that has an error
-        result = self.react.react_cycle("This code has an error", check_callback, fix_callback)
+        result = self.memory.react_cycle("This code has an error", check_callback, fix_callback)
         
         # Verify fix_callback was called
         self.assertTrue(fix_called[0], "Fix callback was not called")
 
         self.assertIn("This code has a fixed", result)
-        self.assertIn("This code has a fixed", self.react.last_code)
+        self.assertIn("This code has a fixed", self.memory.last_code)
         
         # Check log
-        logs = self.react.get_log()
+        logs = self.memory.get_log()
         self.assertEqual(len(logs), 1)
         self.assertEqual(logs[0]["iteration"], 1)
     
-    def test_react_cycle_failure(self):
+    def test_memory_cycle_failure(self):
         """Test the react_cycle method with unsuccessful fix."""
-        self.react.setup(max_iterations=3)
+        self.memory.setup(max_iterations=3)
         
         # Mock callbacks
         def check_callback(code: str) -> List[Diagnostic]:
@@ -264,17 +264,17 @@ class TestReactCoverage(unittest.TestCase):
             return code  # Return the same code (no fix)
         
         # Test with code that has an error that can't be fixed
-        result = self.react.react_cycle("This code has an error", check_callback, fix_callback)
+        result = self.memory.react_cycle("This code has an error", check_callback, fix_callback)
         self.assertEqual(result, "")  # Should return empty string if can't fix
-        self.assertIn("This code has an error", self.react.last_code)
+        self.assertIn("This code has an error", self.memory.last_code)
         
         # Check log
-        logs = self.react.get_log()
+        logs = self.memory.get_log()
         self.assertEqual(len(logs), 3)  # Should have 3 iterations
     
-    def test_react_cycle_learning(self):
+    def test_memory_cycle_learning(self):
         """Test the react_cycle method with learning enabled."""
-        self.react.setup(db_path=self.temp_db.name, learn=True, max_iterations=3)
+        self.memory.setup(db_path=self.temp_db.name, learn=True, max_iterations=3)
         
         # Mock callbacks
         def check_callback(code: str) -> List[Diagnostic]:
@@ -290,27 +290,27 @@ class TestReactCoverage(unittest.TestCase):
             return code
         
         # Test with code that has an error that can be fixed
-        result = self.react.react_cycle("This code has an error1", check_callback, fix_callback)
+        result = self.memory.react_cycle("This code has an error1", check_callback, fix_callback)
         self.assertIn("This code has a fixed1", result)
         
         # Check if the error example was added to the DB
-        self.assertIn("Error type 1", self.react._db)
+        self.assertIn("Error type 1", self.memory._db)
         
         # Test with code that has a different error that can't be fixed
-        result = self.react.react_cycle("This code has an error2", check_callback, fix_callback)
+        result = self.memory.react_cycle("This code has an error2", check_callback, fix_callback)
         self.assertEqual(result, "")  # Should return empty string if can't fix
         
         # The second error type should not be added since the fix wasn't successful
-        self.assertNotIn("Error type 2", self.react._db)
+        self.assertNotIn("Error type 2", self.memory._db)
     
-    def test_react_cycle_not_ready(self):
+    def test_memory_cycle_not_ready(self):
         """Test the react_cycle method when React is not ready."""
         # Don't call setup, so _is_ready is False
-        result = self.react.react_cycle("code", lambda x: [], lambda x, y, z, d, i: x)
+        result = self.memory.react_cycle("code", lambda x: [], lambda x, y, z, d, i: x)
         self.assertEqual(result, "")
-        self.assertIn("not ready", self.react.error_message)
+        self.assertIn("not ready", self.memory.error_message)
     
-    # Edge case tests from test_react_edge_cases.py
+    # Edge case tests from test_memory_edge_cases.py
     
     @patch('builtins.open', new_callable=mock_open)
     @patch('ruamel.yaml.YAML.load')
@@ -320,12 +320,12 @@ class TestReactCoverage(unittest.TestCase):
         mock_yaml_load.side_effect = Exception("Test exception")
         
         # Call setup which will call _load_db
-        result = self.react.setup(db_path=self.temp_db.name, learn=False)
+        result = self.memory.setup(db_path=self.temp_db.name, learn=False)
         
         # Verify the result and error message
         self.assertFalse(result)
-        self.assertIn("Failed to load DB", self.react.error_message)
-        self.assertIn("Test exception", self.react.error_message)
+        self.assertIn("Failed to load DB", self.memory.error_message)
+        self.assertIn("Test exception", self.memory.error_message)
     
     @patch('builtins.open', new_callable=mock_open)
     @patch('ruamel.yaml.YAML.dump')
@@ -335,18 +335,18 @@ class TestReactCoverage(unittest.TestCase):
         mock_yaml_dump.side_effect = Exception("Test exception")
         
         # Setup with learn mode enabled
-        self.react.setup(db_path=self.temp_db.name, learn=True)
+        self.memory.setup(db_path=self.temp_db.name, learn=True)
         
-        self.react._db["test_error"] = {"fix_question": "test_question", "fix_answer": "test_answer"}
+        self.memory._db["test_error"] = {"fix_question": "test_question", "fix_answer": "test_answer"}
         try:
-            self.react._add_error_example("test_error2", "test_question2", "test_answer2")
+            self.memory._add_error_example("test_error2", "test_question2", "test_answer2")
         except Exception:
             # We expect an exception to be raised
             pass
         
         # Verify that the database was updated even though saving failed
-        self.assertIn("test_error2", self.react._db)
-        self.assertEqual(self.react._db["test_error2"]["fix_question"], "test_question2")
+        self.assertIn("test_error2", self.memory._db)
+        self.assertEqual(self.memory._db["test_error2"]["fix_question"], "test_question2")
     
     def test_load_db_nonexistent_file(self):
         """Test _load_db with a non-existent file."""
@@ -355,15 +355,15 @@ class TestReactCoverage(unittest.TestCase):
             os.remove(self.temp_db.name)
         
         # Call _load_db directly
-        self.react._db_path = self.temp_db.name
-        self.react._load_db()
+        self.memory._db_path = self.temp_db.name
+        self.memory._load_db()
         
         # Verify that _db is an empty dict
-        self.assertEqual(self.react._db, {})
+        self.assertEqual(self.memory._db, {})
     
-    def test_react_cycle_no_diagnostics(self):
+    def test_memory_cycle_no_diagnostics(self):
         """Test react_cycle when check_callback returns no diagnostics."""
-        self.react.setup()
+        self.memory.setup()
         
         # Mock callbacks
         def check_callback(code: str) -> List[Diagnostic]:
@@ -373,18 +373,18 @@ class TestReactCoverage(unittest.TestCase):
             return code  # No changes
         
         # Test with code that has no errors
-        result = self.react.react_cycle("This code has no errors", check_callback, fix_callback)
+        result = self.memory.react_cycle("This code has no errors", check_callback, fix_callback)
         self.assertEqual(result, "This code has no errors")
-        self.assertEqual(self.react.last_code, "This code has no errors")
+        self.assertEqual(self.memory.last_code, "This code has no errors")
         
         # Check log
-        logs = self.react.get_log()
+        logs = self.memory.get_log()
         self.assertEqual(len(logs), 1)
         self.assertEqual(logs[0]["iteration"], 1)
     
-    def test_react_cycle_insert_comment_exception_in_delta(self):
+    def test_memory_cycle_insert_comment_exception_in_delta(self):
         """Test react_cycle when insert_comment raises an exception in delta mode."""
-        self.react.setup(max_iterations=3)
+        self.memory.setup(max_iterations=3)
         
         # Mock callbacks
         def check_callback(code: str) -> List[Diagnostic]:
@@ -394,17 +394,17 @@ class TestReactCoverage(unittest.TestCase):
             return code.replace("error", "fixed")
         
         # Test with code that will cause an exception in insert_comment
-        result = self.react.react_cycle("This code has an error", check_callback, fix_callback)
+        result = self.memory.react_cycle("This code has an error", check_callback, fix_callback)
         self.assertEqual(result, "")  # Should return empty string on error
-        self.assertIn("Failed to insert diagnostic comment in delta", self.react.error_message)
+        self.assertIn("Failed to insert diagnostic comment in delta", self.memory.error_message)
         
         # Check log
-        logs = self.react.get_log()
+        logs = self.memory.get_log()
         self.assertEqual(len(logs), 1)
     
-    def test_react_cycle_insert_comment_exception_in_full(self):
+    def test_memory_cycle_insert_comment_exception_in_full(self):
         """Test react_cycle when insert_comment raises an exception in full code mode."""
-        self.react.setup(max_iterations=3)
+        self.memory.setup(max_iterations=3)
         
         # Mock callbacks with a counter to control when to raise the exception
         iteration_counter = [0]
@@ -423,17 +423,17 @@ class TestReactCoverage(unittest.TestCase):
             return code + " modified"
         
         # Test with code that will cause an exception in insert_comment on the second iteration
-        result = self.react.react_cycle("This code has an error", check_callback, fix_callback)
+        result = self.memory.react_cycle("This code has an error", check_callback, fix_callback)
         self.assertEqual(result, "")  # Should return empty string on error
-        self.assertIn("Failed to insert diagnostic comment", self.react.error_message)
+        self.assertIn("Failed to insert diagnostic comment", self.memory.error_message)
         
         # Check log
-        logs = self.react.get_log()
+        logs = self.memory.get_log()
         self.assertEqual(len(logs), 2)  # Should have 2 iterations
     
-    def test_react_cycle_learning_with_new_error(self):
+    def test_memory_cycle_learning_with_new_error(self):
         """Test react_cycle with learning enabled and a new error type."""
-        self.react.setup(db_path=self.temp_db.name, learn=True, max_iterations=3)
+        self.memory.setup(db_path=self.temp_db.name, learn=True, max_iterations=3)
         
         # Mock callbacks with a counter to control behavior
         iteration_counter = [0]
@@ -454,27 +454,27 @@ class TestReactCoverage(unittest.TestCase):
             # Always return a fixed code
             # Manually add both error types to the database to ensure they're present
             if diag.msg == "Error type 1":
-                self.react._add_error_example("Error type 1", "This code has errors", "Fixed code")
+                self.memory._add_error_example("Error type 1", "This code has errors", "Fixed code")
             elif diag.msg == "Error type 2":
-                self.react._add_error_example("Error type 2", "This code has errors", "Fixed code")
+                self.memory._add_error_example("Error type 2", "This code has errors", "Fixed code")
             
             # Add both error types to the database directly to ensure the test passes
             # This simulates what would happen if both errors were encountered and fixed
-            self.react._db["Error type 1"] = {"fix_question": "This code has errors", "fix_answer": "Fixed code"}
-            self.react._db["Error type 2"] = {"fix_question": "This code has errors", "fix_answer": "Fixed code"}
+            self.memory._db["Error type 1"] = {"fix_question": "This code has errors", "fix_answer": "Fixed code"}
+            self.memory._db["Error type 2"] = {"fix_question": "This code has errors", "fix_answer": "Fixed code"}
             
             return "Fixed code"
         
         # Test with code that will have different error types
-        result = self.react.react_cycle("This code has errors", check_callback, fix_callback)
+        result = self.memory.react_cycle("This code has errors", check_callback, fix_callback)
         self.assertIn("Fixed code", result)
         
         # Check if both error examples were added to the DB
-        self.assertIn("Error type 1", self.react._db)
-        self.assertIn("Error type 2", self.react._db)
+        self.assertIn("Error type 1", self.memory._db)
+        self.assertIn("Error type 2", self.memory._db)
         
         # Check log
-        logs = self.react.get_log()
+        logs = self.memory.get_log()
         self.assertEqual(len(logs), 2)
 
     @patch('builtins.open', new_callable=mock_open)
@@ -486,12 +486,12 @@ class TestReactCoverage(unittest.TestCase):
         
         # Setup with learn mode enabled and a non-existent DB file
         # This should trigger the code path in lines 98-104
-        result = self.react.setup(db_path="nonexistent_db.yaml", learn=True)
+        result = self.memory.setup(db_path="nonexistent_db.yaml", learn=True)
         
         # Verify the result and error message
         self.assertFalse(result)
-        self.assertIn("Failed to create DB", self.react.error_message)
-        self.assertIn("Test exception", self.react.error_message)
+        self.assertIn("Failed to create DB", self.memory.error_message)
+        self.assertIn("Test exception", self.memory.error_message)
 
 
 if __name__ == "__main__":
