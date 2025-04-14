@@ -1,0 +1,5 @@
+#!/bin/bash
+poetry run pytest -k "test_memory_compile_gcc_simple" -v
+poetry run pytest -k "test_memory_compile_slang_simple" -v
+poetry run pytest -k "test_memory_coverage" -v
+poetry run pytest -k "test_memory_utils" -v
